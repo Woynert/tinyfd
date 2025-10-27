@@ -90,7 +90,7 @@ int main( int argc , char * argv[] )
 	unsigned char lRgbColor[3];
 	FILE * lIn;
 	char lBuffer[1024];
-	char const * lFilterPatterns[2] = { "*.txt", "*.text" };
+	char const * lFilterPatterns[2] = { "*.txt", "*.json" };
 
 	(void)argv; /*to silence stupid visual studio warning*/
 
