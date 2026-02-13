@@ -7,7 +7,7 @@ Copyright (c) 2014 - 2025 Guillaume Vareille http://ysengrin.com
 
 ********* TINY FILE DIALOGS OFFICIAL WEBSITE IS ON SOURCEFORGE *********
   _________
- /         \ hello_wchar_t.c v3.21.2 [Oct 25, 2025]
+ /         \ hello_wchar_t.c v3.21.3 [Feb 12, 2026]
  |tiny file| Hello WCHAR_T windows only file created [November 9, 2014]
  | dialogs |
  \____  ___/ http://tinyfiledialogs.sourceforge.net
