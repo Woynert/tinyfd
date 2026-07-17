@@ -11,7 +11,7 @@ Copyright (c) 2014 - 2025 Guillaume Vareille http://ysengrin.com
 
 ********* TINY FILE DIALOGS OFFICIAL WEBSITE IS ON SOURCEFORGE *********
   _________
- /         \ tinyfiledialogs.c v3.21.3 [Feb 12, 2026] zlib licence
+ /         \ tinyfiledialogs.c v3.21.4 [Jul 17, 2026] zlib licence
  |tiny file| Unique code file created [November 9, 2014]
  | dialogs |
  \____  ___/ http://tinyfiledialogs.sourceforge.net
@@ -3571,6 +3571,9 @@ static char * dialogNameOnly(void)
 				{
 						strcpy(lDialogName , "" );
 				}
+				else if ( * strcpy(lDialogName , "bsddialog" )
+						&& detectPresence( lDialogName ) )
+				{}
 				else if ( tfd_isDarwin() && * strcpy(lDialogName , "/opt/local/bin/dialog" )
 						&& detectPresence( lDialogName ) )
 				{}
