@@ -119,6 +119,14 @@ misrepresented as being the original software.
 
 char tinyfd_version[8] = "3.21.5";
 
+/*
+#define STR_(x) #x
+#define STR(x) STR_(x)
+#pragma message("_POSIX_C_SOURCE = " STR(_POSIX_C_SOURCE))
+#pragma message("__clang_major__ = " STR(__clang_major__))
+#pragma message("_POSIX_VERSION = " STR(_POSIX_VERSION))
+*/
+
 /******************************************************************************************************/
 /**************************************** UTF-8 on Windows ********************************************/
 /******************************************************************************************************/
