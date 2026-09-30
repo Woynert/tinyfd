@@ -11,7 +11,7 @@ Copyright (c) 2014 - 2025 Guillaume Vareille http://ysengrin.com
 
 ********* TINY FILE DIALOGS OFFICIAL WEBSITE IS ON SOURCEFORGE *********
   _________
- /         \ tinyfiledialogs.c v3.21.4 [Jul 17, 2026] zlib licence
+ /         \ tinyfiledialogs.c v3.21.5 [Sep 30, 2026] zlib licence
  |tiny file| Unique code file created [November 9, 2014]
  | dialogs |
  \____  ___/ http://tinyfiledialogs.sourceforge.net
@@ -69,6 +69,8 @@ misrepresented as being the original software.
     #define _POSIX_C_SOURCE 199506L /* 199506L is enough for freebsd for realpath() */
   #elif defined(__illumos__) || defined(__solaris__)
     #define _POSIX_C_SOURCE 200112L /* illumos/solaris needs 200112L for realpath() */
+  #elif defined(__clang__) && (__clang_major__ >= 21)
+    #define _POSIX_C_SOURCE 199506L /* to define strtok_r */
   #else
     #define _POSIX_C_SOURCE 2 /* to accept POSIX 2 in old ANSI C standards */
   #endif
@@ -115,7 +117,7 @@ misrepresented as being the original software.
 #endif
 #define LOW_MULTIPLE_FILES 32
 
-char tinyfd_version[8] = "3.21.4";
+char tinyfd_version[8] = "3.21.5";
 
 /******************************************************************************************************/
 /**************************************** UTF-8 on Windows ********************************************/
@@ -3516,13 +3518,22 @@ static int * getMajorMinorPatch( char const * aExecutable )
 {
 		static int lArray[3] ;
 		char * lTmp ;
+		char * lRest ;
 
 		lTmp = (char *) getVersion(aExecutable);
+		lRest = lTmp ;
+
+#if defined(_POSIX_VERSION) && _POSIX_VERSION >= 199506L
+		lArray[0] = atoi( strtok_r(lTmp," ,.-", & lRest) ) ;
+		lArray[1] = atoi( strtok_r(0," ,.-", & lRest) ) ;
+		lArray[2] = atoi( strtok_r(0," ,.-", & lRest) ) ;
+#else
 		lArray[0] = atoi( strtok(lTmp," ,.-") ) ;
-		/* printf("lArray0 %d\n", lArray[0]); */
 		lArray[1] = atoi( strtok(0," ,.-") ) ;
-		/* printf("lArray1 %d\n", lArray[1]); */
 		lArray[2] = atoi( strtok(0," ,.-") ) ;
+#endif
+		/* printf("lArray0 %d\n", lArray[0]); */
+		/* printf("lArray1 %d\n", lArray[1]); */
 		/* printf("lArray2 %d\n", lArray[2]); */
 
 		if ( !lArray[0] && !lArray[1] && !lArray[2] ) return NULL;
@@ -3600,6 +3611,7 @@ int isDialogVersionBetter09b(void)
 		char * lMinorP ;
 		char * lLetter ;
 		char lBuff[128] ;
+		char * lRest ;
 
 		/*char lTest[128] = " 0.9b-20031126" ;*/
 
@@ -3608,18 +3620,30 @@ int isDialogVersionBetter09b(void)
 		/*lVersion = lTest ;*/
 		/*printf("lVersion %s\n", lVersion);*/
 		strcpy(lBuff,lVersion);
+		lRest = lVersion ;
+#if defined(_POSIX_VERSION) && _POSIX_VERSION >= 199506L
+		lMajor = atoi( strtok_r(lVersion," ,.-", & lRest) ) ;
+		lMinorP = strtok_r(0," ,.-abcdefghijklmnopqrstuvxyz", & lRest);
+		lDate = atoi( strtok_r(0," ,.-", & lRest) ) ;
+#else
 		lMajor = atoi( strtok(lVersion," ,.-") ) ;
-		/*printf("lMajor %d\n", lMajor);*/
 		lMinorP = strtok(0," ,.-abcdefghijklmnopqrstuvxyz");
-		lMinor = atoi( lMinorP ) ;
-		/*printf("lMinor %d\n", lMinor );*/
 		lDate = atoi( strtok(0," ,.-") ) ;
+#endif
+		/*printf("lMajor %d\n", lMajor);*/
 		if (lDate<0) lDate = - lDate;
 		/*printf("lDate %d\n", lDate);*/
 		lLetter = lMinorP + strlen(lMinorP) ;
+		lRest = lLetter ;
 		strcpy(lVersion,lBuff);
+#if defined(_POSIX_VERSION) && _POSIX_VERSION >= 199506L
+		strtok_r(lLetter," ,.-", & lRest);
+#else
 		strtok(lLetter," ,.-");
+#endif
 		/*printf("lLetter %s\n", lLetter);*/
+		lMinor = atoi( lMinorP ) ;
+		/*printf("lMinor %d\n", lMinor );*/
 		lResult = (lMajor > 0) || ( ( lMinor == 9 ) && (*lLetter == 'b') && (lDate >= 20031126) );
 		/*printf("lResult %d\n", lResult);*/
 		return lResult;
