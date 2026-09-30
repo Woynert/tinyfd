@@ -4251,6 +4251,7 @@ int tfd_zenityVersion(void)
 	static int lZenityVersion = -1 ;
 	char lBuff[MAX_PATH_OR_CMD] ;
 	FILE * lIn ;
+	char * lRest ;
 
 	if ( lZenityVersion < 0 )
 	{
@@ -4260,7 +4261,12 @@ int tfd_zenityVersion(void)
 			if ( fgets( lBuff , sizeof( lBuff ) , lIn ) != NULL )
 			{
 				lZenityVersion = 1000 * atoi( lBuff ) ;
+				lRest = lBuff ;
+#if defined(_POSIX_VERSION) && _POSIX_VERSION >= 199506L
+				lZenityVersion += atoi( strtok_r( lBuff, "." , & lRest) + 2 ) ;
+#else
 				lZenityVersion += atoi( strtok( lBuff, "." ) + 2 ) ;
+#endif
 				/* 3018 , 3010 , 3000, 2032 was 5 , 4 , 3, 2 */ 
 			}
 			pclose( lIn ) ;
