@@ -3535,6 +3535,7 @@ static int * getMajorMinorPatch( char const * aExecutable )
 		lArray[1] = atoi( strtok_r(0," ,.-", & lRest) ) ;
 		lArray[2] = atoi( strtok_r(0," ,.-", & lRest) ) ;
 #else
+		lRest ;
 		lArray[0] = atoi( strtok(lTmp," ,.-") ) ;
 		lArray[1] = atoi( strtok(0," ,.-") ) ;
 		lArray[2] = atoi( strtok(0," ,.-") ) ;
@@ -3646,6 +3647,7 @@ int isDialogVersionBetter09b(void)
 #if defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 199506L
 		strtok_r(lLetter," ,.-", & lRest);
 #else
+		lRest ;
 		strtok(lLetter," ,.-");
 #endif
 		/*printf("lLetter %s\n", lLetter);*/
@@ -4272,6 +4274,7 @@ int tfd_zenityVersion(void)
 #if defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 199506L
 				lZenityVersion += atoi( strtok_r( lBuff, "." , & lRest) + 2 ) ;
 #else
+				lRest ;
 				lZenityVersion += atoi( strtok( lBuff, "." ) + 2 ) ;
 #endif
 				/* 3018 , 3010 , 3000, 2032 was 5 , 4 , 3, 2 */ 
