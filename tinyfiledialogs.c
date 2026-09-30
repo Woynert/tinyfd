@@ -74,7 +74,7 @@ misrepresented as being the original software.
   #elif defined(__clang__) && (__clang_major__ >= 21)
     #define _POSIX_C_SOURCE 199506L /* to define strtok_r */
   #else
-    #define _POSIX_C_SOURCE 2 /* to accept POSIX 2 in old ANSI C standards */
+    #define _POSIX_C_SOURCE 2 /* to accept POSIX 2 in old ANSI C standards (equivalent 199209L) */
   #endif
  #endif
 #endif
@@ -122,9 +122,8 @@ misrepresented as being the original software.
 char tinyfd_version[8] = "3.21.5";
 
 /*
-#pragma message("_POSIX_C_SOURCE = " STR(_POSIX_C_SOURCE))
-#pragma message("__clang_major__ = " STR(__clang_major__))
-#pragma message("_POSIX_VERSION = " STR(_POSIX_VERSION))
+#pragma message("_POSIX_C_SOURCE = " STR(_POSIX_C_SOURCE)) // asking value set by me before including the headers
+#pragma message("_POSIX_VERSION = " STR(_POSIX_VERSION)) // value read by the compiler in the headers
 */
 
 /******************************************************************************************************/
