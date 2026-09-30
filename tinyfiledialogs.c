@@ -57,6 +57,8 @@ misrepresented as being the original software.
     |__________________________________________|
 */
 
+#define STR_(x) #x
+#define STR(x) STR_(x)
 
 #if defined(__GNUC__) || defined(__clang__)
 #ifndef _GNU_SOURCE
@@ -120,8 +122,6 @@ misrepresented as being the original software.
 char tinyfd_version[8] = "3.21.5";
 
 /*
-#define STR_(x) #x
-#define STR(x) STR_(x)
 #pragma message("_POSIX_C_SOURCE = " STR(_POSIX_C_SOURCE))
 #pragma message("__clang_major__ = " STR(__clang_major__))
 #pragma message("_POSIX_VERSION = " STR(_POSIX_VERSION))
@@ -3531,7 +3531,7 @@ static int * getMajorMinorPatch( char const * aExecutable )
 		lTmp = (char *) getVersion(aExecutable);
 		lRest = lTmp ;
 
-#if defined(_POSIX_VERSION) && _POSIX_VERSION >= 199506L
+#if defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 199506L
 		lArray[0] = atoi( strtok_r(lTmp," ,.-", & lRest) ) ;
 		lArray[1] = atoi( strtok_r(0," ,.-", & lRest) ) ;
 		lArray[2] = atoi( strtok_r(0," ,.-", & lRest) ) ;
@@ -3629,7 +3629,7 @@ int isDialogVersionBetter09b(void)
 		/*printf("lVersion %s\n", lVersion);*/
 		strcpy(lBuff,lVersion);
 		lRest = lVersion ;
-#if defined(_POSIX_VERSION) && _POSIX_VERSION >= 199506L
+#if defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 199506L
 		lMajor = atoi( strtok_r(lVersion," ,.-", & lRest) ) ;
 		lMinorP = strtok_r(0," ,.-abcdefghijklmnopqrstuvxyz", & lRest);
 		lDate = atoi( strtok_r(0," ,.-", & lRest) ) ;
@@ -3644,7 +3644,7 @@ int isDialogVersionBetter09b(void)
 		lLetter = lMinorP + strlen(lMinorP) ;
 		lRest = lLetter ;
 		strcpy(lVersion,lBuff);
-#if defined(_POSIX_VERSION) && _POSIX_VERSION >= 199506L
+#if defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 199506L
 		strtok_r(lLetter," ,.-", & lRest);
 #else
 		strtok(lLetter," ,.-");
@@ -4270,7 +4270,7 @@ int tfd_zenityVersion(void)
 			{
 				lZenityVersion = 1000 * atoi( lBuff ) ;
 				lRest = lBuff ;
-#if defined(_POSIX_VERSION) && _POSIX_VERSION >= 199506L
+#if defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 199506L
 				lZenityVersion += atoi( strtok_r( lBuff, "." , & lRest) + 2 ) ;
 #else
 				lZenityVersion += atoi( strtok( lBuff, "." ) + 2 ) ;
