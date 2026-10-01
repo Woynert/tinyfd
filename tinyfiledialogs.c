@@ -80,6 +80,10 @@ misrepresented as being the original software.
 #endif
 #endif
 
+/*
+#pragma message("_POSIX_C_SOURCE = " STR(_POSIX_C_SOURCE)) // asking value set by me before including the headers
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -122,8 +126,7 @@ misrepresented as being the original software.
 char tinyfd_version[8] = "3.21.5";
 
 /*
-#pragma message("_POSIX_C_SOURCE = " STR(_POSIX_C_SOURCE)) // asking value set by me before including the headers
-#pragma message("_POSIX_VERSION = " STR(_POSIX_VERSION)) // value read by the compiler in the headers
+#pragma message("_POSIX_VERSION = " STR(_POSIX_VERSION)) // what the compiler can do (read in the headers)
 */
 
 /******************************************************************************************************/
