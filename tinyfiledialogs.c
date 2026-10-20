@@ -1426,7 +1426,8 @@ InputDialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		state->edit = CreateWindowExW(
 			WS_EX_CLIENTEDGE, L"EDIT", L"",
 			WS_CHILD | WS_VISIBLE | WS_TABSTOP |
-			ES_AUTOHSCROLL,
+			ES_AUTOHSCROLL |
+			(state->password ? ES_PASSWORD : 0),
 			12, 38, 356, 25,
 			hwnd, (HMENU)1001, state->instance, NULL);
 
@@ -1532,6 +1533,8 @@ wchar_t* tinyfd_inputBoxW(
 	lResult[0] = L'\0';
 
 	state.instance = GetModuleHandleW(NULL);
+
+	/* NULL default input means password mode. */
 	state.password = (aDefaultInput == NULL);
 
 	wc.lpfnWndProc = InputDialogProc;
@@ -1573,7 +1576,11 @@ wchar_t* tinyfd_inputBoxW(
 			prompt,
 			aMessage ? aMessage : L"Enter a value:");
 
-	if (state.edit && aDefaultInput)
+	/*
+	 * If aDefaultInput is not NULL, show its contents as normal text.
+	 * If aDefaultInput is NULL, leave the password field empty.
+	 */
+	if (state.edit && aDefaultInput != NULL)
 		SetWindowTextW(state.edit, aDefaultInput);
 
 	GetWindowRect(dialog, &rc);

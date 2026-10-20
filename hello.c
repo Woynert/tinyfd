@@ -110,6 +110,7 @@ int main( int argc , char * argv[] )
 
 	tinyfd_beep();
 
+	/* we query tinyfiledialogs version number */
 	lWillBeGraphicMode = tinyfd_inputBox("tinyfd_query", NULL, NULL);
 
 	strcpy(lBuffer, "tinyfiledialogs\nv");

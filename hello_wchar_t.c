@@ -75,6 +75,7 @@ int main(void) /* WINDOWS ONLY */
 
 	tinyfd_beep();
 
+	/* we query tinyfiledialogs version number */
 	lWillBeGraphicMode = tinyfd_inputBoxW(L"tinyfd_query", NULL, NULL);
 
 	wcscpy(lBuffer, L"v");
