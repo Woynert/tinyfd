@@ -1626,7 +1626,7 @@ wchar_t* tinyfd_inputBoxW(
 	if (state.cancelled)
 		return NULL;
 
-	wcscpy_s(lResult, MAX_PATH_OR_CMD, state.result);
+	wcscpy(lResult, state.result );
 
 	return lResult;
 }
