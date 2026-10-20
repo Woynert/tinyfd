@@ -734,31 +734,6 @@ void tinyfd_beep(void)
 }
 
 
-/*static void wipefileW(wchar_t const* aFilename)
-{
-	int i;
-	FILE * lIn;
-#if (defined(__MINGW32_MAJOR_VERSION) && !defined(__MINGW64__) && (__MINGW32_MAJOR_VERSION <= 3)) || defined(__BORLANDC__) || defined(__WATCOMC__) || defined(__DMC__)
-	struct _stat st;
-	if (_wstat(aFilename, &st) == 0)
-#else
-	struct __stat64 st;
-	if (_wstat64(aFilename, &st) == 0)
-#endif
-	{
-		lIn = ( FILE * ) _wfopen(aFilename, L"w");
-		if ( lIn )
-		{
-			for (i = 0; i < st.st_size; i++)
-			{
-				fputc('A', lIn);
-			}
-			fclose(lIn);
-		}
-	}
-}*/
-
-
 static wchar_t * getPathWithoutFinalSlashW(
 		wchar_t * aoDestination, /* make sure it is allocated, use _MAX_PATH */
 		wchar_t const * aSource) /* aoDestination and aSource can be the same */
@@ -963,34 +938,6 @@ static int fileExists(char const * aFilePathAndName)
 				return 1;
 		}
 }
-
-/*static void replaceWchar(wchar_t* aString,
-		wchar_t aOldChr,
-		wchar_t aNewChr)
-{
-		wchar_t * p;
-
-		if (!aString)
-		{
-				return ;
-		}
-
-		if (aOldChr == aNewChr)
-		{
-				return ;
-		}
-
-		p = aString;
-		while ((p = wcsrchr(p, aOldChr)))
-		{
-				*p = aNewChr;
-#ifdef TINYFD_NOCCSUNICODE
-				p++;
-#endif
-				p++;
-		}
-		return ;
-}*/
 
 
 static int quoteDetectedW(wchar_t const * aString)
