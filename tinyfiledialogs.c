@@ -1396,28 +1396,31 @@ typedef struct
 static LRESULT CALLBACK
 InputDialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	InputDialogState* state = (InputDialogState*)
+	InputDialogState* state;
+	CREATESTRUCTW* cs;
+	HFONT font;
+	HWND prompt;
+	HWND ok;
+	HWND cancel;
+
+	state = (InputDialogState*)
 		GetWindowLongPtrW(hwnd, GWLP_USERDATA);
 
 	switch (msg)
 	{
 	case WM_NCCREATE:
-	{
-		CREATESTRUCTW* cs = (CREATESTRUCTW*)lParam;
-
+		cs = (CREATESTRUCTW*)lParam;
 		state = (InputDialogState*)cs->lpCreateParams;
 
 		SetWindowLongPtrW(
 			hwnd, GWLP_USERDATA, (LONG_PTR)state);
 
 		return DefWindowProcW(hwnd, msg, wParam, lParam);
-	}
 
 	case WM_CREATE:
-	{
-		HFONT font = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
+		font = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
 
-		HWND prompt = CreateWindowExW(
+		prompt = CreateWindowExW(
 			0, L"STATIC", L"Enter a value:",
 			WS_CHILD | WS_VISIBLE,
 			12, 12, 356, 22,
@@ -1431,14 +1434,14 @@ InputDialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			12, 38, 356, 25,
 			hwnd, (HMENU)1001, state->instance, NULL);
 
-		HWND ok = CreateWindowExW(
+		ok = CreateWindowExW(
 			0, L"BUTTON", L"OK",
 			WS_CHILD | WS_VISIBLE | WS_TABSTOP |
 			BS_DEFPUSHBUTTON,
 			192, 76, 84, 27,
 			hwnd, (HMENU)IDOK, state->instance, NULL);
 
-		HWND cancel = CreateWindowExW(
+		cancel = CreateWindowExW(
 			0, L"BUTTON", L"Cancel",
 			WS_CHILD | WS_VISIBLE | WS_TABSTOP,
 			284, 76, 84, 27,
@@ -1450,7 +1453,6 @@ InputDialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		SendMessageW(cancel, WM_SETFONT, (WPARAM)font, TRUE);
 
 		return 0;
-	}
 
 	case WM_COMMAND:
 		switch (LOWORD(wParam))
@@ -1459,8 +1461,7 @@ InputDialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			GetWindowTextW(
 				state->edit,
 				state->result,
-				MAX_PATH_OR_CMD
-			);
+				MAX_PATH_OR_CMD);
 
 			DestroyWindow(hwnd);
 			return 0;
@@ -1498,15 +1499,24 @@ wchar_t* tinyfd_inputBoxW(
 	const wchar_t* aMessage,
 	const wchar_t* aDefaultInput)
 {
-	const wchar_t* lClassName = L"TinyInputDialogClass";
+	const wchar_t* lClassName;
 	static wchar_t lResult[MAX_PATH_OR_CMD];
 
-	InputDialogState state = { 0 };
-	WNDCLASSW wc = { 0 };
+	InputDialogState state;
+	WNDCLASSW wc;
 	MSG msg;
 	RECT rc;
 	HWND dialog;
-	BOOL registered = FALSE;
+	HWND prompt;
+	BOOL registered;
+	BOOL r;
+
+	lClassName = L"TinyInputDialogClass";
+
+	memset(&state, 0, sizeof(state));
+	memset(&wc, 0, sizeof(wc));
+
+	registered = FALSE;
 
 	if (aTitle && !wcscmp(aTitle, L"tinyfd_query"))
 	{
@@ -1568,7 +1578,7 @@ wchar_t* tinyfd_inputBoxW(
 		return NULL;
 	}
 
-	HWND prompt = FindWindowExW(
+	prompt = FindWindowExW(
 		dialog, NULL, L"STATIC", NULL);
 
 	if (prompt)
@@ -1598,7 +1608,7 @@ wchar_t* tinyfd_inputBoxW(
 
 	while (IsWindow(dialog))
 	{
-		BOOL r = GetMessageW(&msg, NULL, 0, 0);
+		r = GetMessageW(&msg, NULL, 0, 0);
 
 		if (r <= 0)
 		{
@@ -1626,7 +1636,8 @@ wchar_t* tinyfd_inputBoxW(
 	if (state.cancelled)
 		return NULL;
 
-	wcscpy(lResult, state.result );
+	wcsncpy(lResult, state.result, MAX_PATH_OR_CMD - 1);
+	lResult[MAX_PATH_OR_CMD - 1] = L'\0';
 
 	return lResult;
 }
