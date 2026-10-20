@@ -734,7 +734,7 @@ void tinyfd_beep(void)
 }
 
 
-static void wipefileW(wchar_t const * aFilename)
+/*static void wipefileW(wchar_t const* aFilename)
 {
 	int i;
 	FILE * lIn;
@@ -756,7 +756,7 @@ static void wipefileW(wchar_t const * aFilename)
 			fclose(lIn);
 		}
 	}
-}
+}*/
 
 
 static wchar_t * getPathWithoutFinalSlashW(
@@ -964,7 +964,7 @@ static int fileExists(char const * aFilePathAndName)
 		}
 }
 
-static void replaceWchar(wchar_t * aString,
+/*static void replaceWchar(wchar_t* aString,
 		wchar_t aOldChr,
 		wchar_t aNewChr)
 {
@@ -990,7 +990,7 @@ static void replaceWchar(wchar_t * aString,
 				p++;
 		}
 		return ;
-}
+}*/
 
 
 static int quoteDetectedW(wchar_t const * aString)
