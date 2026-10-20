@@ -210,7 +210,7 @@ $ clang -o hello hello.c tinyfiledialogs.c
   TinyCC needs >= v0.9.27 (+ tweaks - contact me) otherwise some headers are missing
   > tcc -o hello.exe hello.c tinyfiledialogs.c ^
       -isystem C:\tcc\winapi-full-for-0.9.27\include\winapi ^
-      -lcomdlg32 -lole32 -luser32 -lshell32
+      -lcomdlg32 -lole32 -luser32 -lshell32 -lgdi32
 
   Embarcadero / Borland C :
   > bcc32c -o hello.exe hello.c tinyfiledialogs.c
@@ -219,15 +219,15 @@ $ clang -o hello hello.c tinyfiledialogs.c
   > owcc -o hello.exe hello.c tinyfiledialogs.c
 
   Windows Intel C :
-  > icx-cc -o hello.exe hello.c tinyfiledialogs.c -lcomdlg32 -lole32 -luser32 -lshell32
-  > icx-cl -o hello.exe hello.c tinyfiledialogs.c comdlg32.lib ole32.lib user32.lib shell32.lib
-  > icx -o hello.exe hello.c tinyfiledialogs.c comdlg32.lib ole32.lib user32.lib shell32.lib
-  > icpx -o hello.exe hello.c tinyfiledialogs.c -lcomdlg32 -lole32 -luser32 -lshell32 -Wno-deprecated
+  > icx-cc -o hello.exe hello.c tinyfiledialogs.c -lcomdlg32 -lole32 -luser32 -lshell32 -lgdi32
+  > icx-cl -o hello.exe hello.c tinyfiledialogs.c comdlg32.lib ole32.lib user32.lib shell32.lib gdi32.lib
+  > icx -o hello.exe hello.c tinyfiledialogs.c comdlg32.lib ole32.lib user32.lib shell32.lib gdi32.lib
+  > icpx -o hello.exe hello.c tinyfiledialogs.c -lcomdlg32 -lole32 -luser32 -lshell32 -lgdi32 -Wno-deprecated
 
   VisualStudio command line :
-  > cl hello.c tinyfiledialogs.c comdlg32.lib ole32.lib user32.lib shell32.lib /W4
+  > cl hello.c tinyfiledialogs.c comdlg32.lib ole32.lib user32.lib shell32.lib gdi32.lib /W4
 
   VisualStudio
 	In the properties of your project, in the linker input field,
-	      you may need to add: comdlg32.lib ole32.lib user32.lib shell32.lib
+	      you may need to add: comdlg32.lib ole32.lib user32.lib shell32.lib gdi32.lib
 	         or maybe simply add: %(AdditionalDependencies)
