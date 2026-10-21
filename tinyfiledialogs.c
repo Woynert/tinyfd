@@ -99,7 +99,6 @@ misrepresented as being the original software.
  #ifndef _WIN32_WINNT
   #define _WIN32_WINNT 0x0500
  #endif
- //#define _WIN32_WINNT 0x0600
 
  #include <windows.h>
  #include <commdlg.h>
