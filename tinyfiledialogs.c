@@ -1387,10 +1387,10 @@ int tinyfd_notifyPopupVista11(
 	nid.uFlags = NIF_INFO;
 	nid.dwInfoFlags = infoFlags;
 
-	wcsncpy_s(nid.szInfoTitle, ARRAYSIZE(nid.szInfoTitle),
-		aTitle, _TRUNCATE);
-	wcsncpy_s(nid.szInfo, ARRAYSIZE(nid.szInfo),
-		aMessage, _TRUNCATE);
+	wcsncpy(nid.szInfoTitle, aTitle, ARRAYSIZE(nid.szInfoTitle) - 1);
+	nid.szInfoTitle[ARRAYSIZE(nid.szInfoTitle) - 1] = L'\0';
+	wcsncpy(nid.szInfo, aMessage, ARRAYSIZE(nid.szInfo) - 1);
+	nid.szInfo[ARRAYSIZE(nid.szInfo) - 1] = L'\0';
 
 	if (!Shell_NotifyIconW(NIM_MODIFY, &nid))
 		goto cleanup;
