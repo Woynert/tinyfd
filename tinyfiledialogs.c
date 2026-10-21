@@ -97,11 +97,18 @@ misrepresented as being the original software.
  #ifndef _WIN32_WINNT
   #define _WIN32_WINNT 0x0500
  #endif
+ #define WIN32_LEAN_AND_MEAN
+
  #include <windows.h>
  #include <commdlg.h>
  #include <shlobj.h>
  #include <conio.h>
  #include <direct.h>
+
+ #include <shellapi.h>
+ #include <wchar.h>
+ #include <stddef.h>
+
  #define TINYFD_NOCCSUNICODE
  #define TINYFD_SLASH "\\"
 #else
@@ -1157,7 +1164,6 @@ int tinyfd_messageBoxW(
 		size_t lDialogStringLen;
 
 		if (aTitle && !wcscmp(aTitle, L"tinyfd_query")) { strcpy(tinyfd_response, "windows_wchar"); return 1; }
-
 		if (quoteDetectedW(aTitle)) return tinyfd_notifyPopupW(L"INVALID TITLE WITH QUOTES", aMessage, aIconType);
 		if (quoteDetectedW(aMessage)) return tinyfd_notifyPopupW(aTitle, L"INVALID MESSAGE WITH QUOTES", aIconType);
 
@@ -1216,118 +1222,297 @@ Show-BalloonTip");
 }*/
 
 
-/* return has only meaning for tinyfd_query */
-int tinyfd_notifyPopupW(
-	wchar_t const* aTitle, /* NULL or L"" */
-	wchar_t const* aMessage, /* NULL or L"" may contain \n \t */
-	wchar_t const* aIconType) /* L"info" L"warning" L"error" */
+#define NOTIFY_CALLBACK (WM_APP + 1)
+#define NOTIFY_ICON_ID  1
+#define NOTIFY_TIMER_ID 1
+
+typedef struct {
+	BOOL iconAdded;
+	BOOL registered;
+} NOTIFY_CONTEXT;
+
+static LRESULT CALLBACK NotifyWndProc(
+	HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 {
-	wchar_t* lDialogString;
-	size_t lTitleLen;
-	size_t lMessageLen;
-	size_t lDialogStringLen;
+	NOTIFY_CONTEXT* ctx = (NOTIFY_CONTEXT*)
+		GetWindowLongPtrW(hwnd, GWLP_USERDATA);
 
-	FILE* lIn;
+	if (msg == NOTIFY_CALLBACK) {
+		switch ((UINT)lp) {
+		case NIN_BALLOONUSERCLICK:
+		case NIN_BALLOONHIDE:
+		case NIN_BALLOONTIMEOUT:
+			PostMessageW(hwnd, WM_CLOSE, 0, 0);
+			return 0;
+		}
+	}
 
-	if (aTitle && !wcscmp(aTitle, L"tinyfd_query")) { strcpy(tinyfd_response, "windows_wchar"); return 1; }
-
-	if (quoteDetectedW(aTitle)) return tinyfd_notifyPopupW(L"INVALID TITLE WITH QUOTES", aMessage, aIconType);
-	if (quoteDetectedW(aMessage)) return tinyfd_notifyPopupW(aTitle, L"INVALID MESSAGE WITH QUOTES", aIconType);
-
-	lTitleLen = aTitle ? wcslen(aTitle) : 0;
-	lMessageLen = aMessage ? wcslen(aMessage) : 0;
-	lDialogStringLen = 3 * MAX_PATH_OR_CMD + lTitleLen + lMessageLen;
-	lDialogString = (wchar_t*)malloc(2 * lDialogStringLen);
-	if (!lDialogString) return 0;
-
-	swprintf(lDialogString,
-#if !defined(__BORLANDC__) && !defined(__TINYC__) && !(defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR))
-		lDialogStringLen,
-#endif
-		L"%ls\\tinyfd.hta", _wgetenv(L"TEMP"));
-
-	lIn = ( FILE * ) _wfopen(lDialogString, L"w");
-	if (!lIn)
-	{
-		free(lDialogString);
+	if (msg == WM_TIMER && wp == NOTIFY_TIMER_ID) {
+		KillTimer(hwnd, NOTIFY_TIMER_ID);
+		PostMessageW(hwnd, WM_CLOSE, 0, 0);
 		return 0;
 	}
 
-	wcscpy(lDialogString, L"\n\
-<html>\n\
-<head>\n\
-<title>");
-	if ( aTitle && wcslen(aTitle) ) wcscat(lDialogString, aTitle);
-	wcscat(lDialogString, L"</title>\n\
-</head>\n\
-<HTA:APPLICATION\n\
-SysMenu = 'no'\n\
-ID = 'tinyfdHTA'\n\
-APPLICATIONNAME = 'tinyfd_notifyPopup'\n\
-MINIMIZEBUTTON = 'no'\n\
-MAXIMIZEBUTTON = 'no'\n\
-BORDER = 'dialog'\n\
-SCROLL = 'no'\n\
-SINGLEINSTANCE = 'yes'\n\
-WINDOWSTATE = 'hidden'>\n\
-<script language = 'VBScript'>\n\
-intWidth = Screen.Width/4\n\
-intHeight = Screen.Height/10\n\
-ResizeTo intWidth, intHeight\n\
-MoveTo Screen.Width * .7, Screen.Height * .8\n\
-result = 0\n\
-Sub Window_onLoad\n\
-idTimer = window.setTimeout(\"PausedSection\", 3000, \"VBScript\")\n\
-End Sub\n");
+	if (msg == WM_CLOSE) {
+		if (ctx && ctx->iconAdded) {
+			NOTIFYICONDATAW nid;
+			ZeroMemory(&nid, sizeof(nid));
+			nid.cbSize = sizeof(nid);
+			nid.hWnd = hwnd;
+			nid.uID = NOTIFY_ICON_ID;
 
-	wcscat(lDialogString, L"\n\
-Sub PausedSection\n\
-window.Close\n\
-End Sub\n\
-</script>\n\
-<body style = 'background-color:#EEEEEE' onkeypress = 'vbs:Default_Buttons' align = 'top'>\n\
-<table width = '100%' height = '80%' align = 'center' border = '0'>\n\
-<tr border = '0'>\n\
-<td align = 'left' valign = 'middle' style='Font-Family:Arial'>\n");
+			Shell_NotifyIconW(NIM_DELETE, &nid);
+			ctx->iconAdded = FALSE;
+		}
 
-	wcscat(lDialogString, aMessage ? aMessage : L"");
-
-	wcscat(lDialogString, L"\n\
-</body>\n\
-</html>\n\
-");
-
-	fputws(lDialogString, lIn);
-	fclose(lIn);
-
-	if (aTitle && wcslen(aTitle))
-	{
-		wcscat(lDialogString, L" -Title '");
-		wcscat(lDialogString, aTitle);
-		wcscat(lDialogString, L"'");
+		DestroyWindow(hwnd);
+		return 0;
 	}
-	if (aMessage && wcslen(aMessage))
-	{
-		wcscat(lDialogString, L" -Message '");
-		wcscat(lDialogString, aMessage);
-		wcscat(lDialogString, L"'");
-	}
-	if (aMessage && wcslen(aIconType))
-	{
-		wcscat(lDialogString, L" -IconType '");
-		wcscat(lDialogString, aIconType);
-		wcscat(lDialogString, L"'");
-	}
-	wcscat(lDialogString, L"\"");
 
-	/* wprintf ( L"lDialogString: %ls\n" , lDialogString ) ; */
-	wcscpy(lDialogString,
-		L"cmd.exe /c mshta.exe \"%TEMP%\\tinyfd.hta\"");
+	if (msg == WM_DESTROY) {
+		PostQuitMessage(0);
+		return 0;
+	}
 
-	hiddenConsoleW(lDialogString, aTitle, 0);
-	free(lDialogString);
-	return 1;
+	return DefWindowProcW(hwnd, msg, wp, lp);
 }
+
+int tinyfd_notifyPopupW(
+	const wchar_t* title,
+	const wchar_t* message,
+	const wchar_t* iconType)
+{
+	static const wchar_t className[] =
+		L"tinyfd_notifyPopupW_Class";
+
+	NOTIFY_CONTEXT ctx = { FALSE, FALSE };
+	WNDCLASSW wc;
+	NOTIFYICONDATAW nid;
+	HINSTANCE instance = GetModuleHandleW(NULL);
+	HWND hwnd = NULL;
+	HICON icon;
+	MSG msg;
+	BOOL registeredHere = FALSE;
+	BOOL requestAccepted = FALSE;
+	DWORD infoFlags = NIIF_INFO;
+	int messageLoopResult;
+
+	if (!title)
+		title = L"Notification";
+	if (!message)
+		message = L"";
+
+	if (iconType) {
+		if (_wcsicmp(iconType, L"warning") == 0)
+			infoFlags = NIIF_WARNING;
+		else if (_wcsicmp(iconType, L"error") == 0)
+			infoFlags = NIIF_ERROR;
+	}
+
+	ZeroMemory(&wc, sizeof(wc));
+	wc.lpfnWndProc = NotifyWndProc;
+	wc.hInstance = instance;
+	wc.lpszClassName = className;
+
+	if (RegisterClassW(&wc)) {
+		registeredHere = TRUE;
+	}
+	else if (GetLastError() != ERROR_CLASS_ALREADY_EXISTS) {
+		return 0;
+	}
+
+	ctx.registered = registeredHere;
+
+	hwnd = CreateWindowExW(
+		0, className, L"", WS_POPUP,
+		0, 0, 0, 0, NULL, NULL, instance, NULL);
+
+	if (!hwnd)
+		goto cleanup;
+
+	SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)&ctx);
+
+	//icon = LoadIconW(NULL, IDI_INFORMATION);
+	icon = LoadIconW(NULL, MAKEINTRESOURCEW(32516));
+	if (!icon)
+		goto cleanup;
+
+	ZeroMemory(&nid, sizeof(nid));
+	nid.cbSize = sizeof(nid);
+	nid.hWnd = hwnd;
+	nid.uID = NOTIFY_ICON_ID;
+	nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
+	nid.uCallbackMessage = NOTIFY_CALLBACK;
+	nid.hIcon = icon;
+
+	wcscpy_s(nid.szTip, ARRAYSIZE(nid.szTip),
+		L"Notification");
+
+	if (!Shell_NotifyIconW(NIM_ADD, &nid))
+		goto cleanup;
+
+	ctx.iconAdded = TRUE;
+
+	ZeroMemory(&nid, sizeof(nid));
+	nid.cbSize = sizeof(nid);
+	nid.hWnd = hwnd;
+	nid.uID = NOTIFY_ICON_ID;
+	nid.uFlags = NIF_INFO;
+	nid.dwInfoFlags = infoFlags;
+
+	wcsncpy_s(nid.szInfoTitle, ARRAYSIZE(nid.szInfoTitle),
+		title, _TRUNCATE);
+	wcsncpy_s(nid.szInfo, ARRAYSIZE(nid.szInfo),
+		message, _TRUNCATE);
+
+	if (!Shell_NotifyIconW(NIM_MODIFY, &nid))
+		goto cleanup;
+
+	requestAccepted = TRUE;
+
+	if (!SetTimer(hwnd, NOTIFY_TIMER_ID, 30000, NULL))
+		goto cleanup;
+
+	while ((messageLoopResult =
+		(int)GetMessageW(&msg, NULL, 0, 0)) > 0) {
+		TranslateMessage(&msg);
+		DispatchMessageW(&msg);
+	}
+
+cleanup:
+	if (hwnd && IsWindow(hwnd)) {
+		KillTimer(hwnd, NOTIFY_TIMER_ID);
+
+		if (ctx.iconAdded) {
+			ZeroMemory(&nid, sizeof(nid));
+			nid.cbSize = sizeof(nid);
+			nid.hWnd = hwnd;
+			nid.uID = NOTIFY_ICON_ID;
+			Shell_NotifyIconW(NIM_DELETE, &nid);
+			ctx.iconAdded = FALSE;
+		}
+
+		DestroyWindow(hwnd);
+	}
+
+	if (registeredHere)
+		UnregisterClassW(className, instance);
+
+	return requestAccepted ? 1 : 0;
+}
+
+
+///* return has only meaning for tinyfd_query */
+//int tinyfd_notifyPopupW(
+//	wchar_t const* aTitle, /* NULL or L"" */
+//	wchar_t const* aMessage, /* NULL or L"" may contain \n \t */
+//	wchar_t const* aIconType) /* L"info" L"warning" L"error" */
+//{
+//	wchar_t* lDialogString;
+//	size_t lTitleLen;
+//	size_t lMessageLen;
+//	size_t lDialogStringLen;
+//
+//	FILE* lIn;
+//
+//	if (aTitle && !wcscmp(aTitle, L"tinyfd_query")) { strcpy(tinyfd_response, "windows_wchar"); return 1; }
+//	if (quoteDetectedW(aTitle)) return tinyfd_notifyPopupW(L"INVALID TITLE WITH QUOTES", aMessage, aIconType);
+//	if (quoteDetectedW(aMessage)) return tinyfd_notifyPopupW(aTitle, L"INVALID MESSAGE WITH QUOTES", aIconType);
+//
+//	lTitleLen = aTitle ? wcslen(aTitle) : 0;
+//	lMessageLen = aMessage ? wcslen(aMessage) : 0;
+//	lDialogStringLen = 3 * MAX_PATH_OR_CMD + lTitleLen + lMessageLen;
+//	lDialogString = (wchar_t*)malloc(2 * lDialogStringLen);
+//	if (!lDialogString) return 0;
+//
+//	swprintf(lDialogString,
+//#if !defined(__BORLANDC__) && !defined(__TINYC__) && !(defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR))
+//		lDialogStringLen,
+//#endif
+//		L"%ls\\tinyfd.hta", _wgetenv(L"TEMP"));
+//
+//	lIn = ( FILE * ) _wfopen(lDialogString, L"w");
+//	if (!lIn)
+//	{
+//		free(lDialogString);
+//		return 0;
+//	}
+//
+//	wcscpy(lDialogString, L"\n\
+//<html>\n\
+//<head>\n\
+//<title>");
+//	if ( aTitle && wcslen(aTitle) ) wcscat(lDialogString, aTitle);
+//	wcscat(lDialogString, L"</title>\n\
+//</head>\n\
+//<HTA:APPLICATION\n\
+//SysMenu = 'no'\n\
+//ID = 'tinyfdHTA'\n\
+//APPLICATIONNAME = 'tinyfd_notifyPopup'\n\
+//MINIMIZEBUTTON = 'no'\n\
+//MAXIMIZEBUTTON = 'no'\n\
+//BORDER = 'dialog'\n\
+//SCROLL = 'no'\n\
+//SINGLEINSTANCE = 'yes'\n\
+//WINDOWSTATE = 'hidden'>\n\
+//<script language = 'VBScript'>\n\
+//intWidth = Screen.Width/4\n\
+//intHeight = Screen.Height/10\n\
+//ResizeTo intWidth, intHeight\n\
+//MoveTo Screen.Width * .7, Screen.Height * .8\n\
+//result = 0\n\
+//Sub Window_onLoad\n\
+//idTimer = window.setTimeout(\"PausedSection\", 3000, \"VBScript\")\n\
+//End Sub\n");
+//
+//	wcscat(lDialogString, L"\n\
+//Sub PausedSection\n\
+//window.Close\n\
+//End Sub\n\
+//</script>\n\
+//<body style = 'background-color:#EEEEEE' onkeypress = 'vbs:Default_Buttons' align = 'top'>\n\
+//<table width = '100%' height = '80%' align = 'center' border = '0'>\n\
+//<tr border = '0'>\n\
+//<td align = 'left' valign = 'middle' style='Font-Family:Arial'>\n");
+//
+//	wcscat(lDialogString, aMessage ? aMessage : L"");
+//
+//	wcscat(lDialogString, L"\n\
+//</body>\n\
+//</html>\n\
+//");
+//
+//	fputws(lDialogString, lIn);
+//	fclose(lIn);
+//
+//	if (aTitle && wcslen(aTitle))
+//	{
+//		wcscat(lDialogString, L" -Title '");
+//		wcscat(lDialogString, aTitle);
+//		wcscat(lDialogString, L"'");
+//	}
+//	if (aMessage && wcslen(aMessage))
+//	{
+//		wcscat(lDialogString, L" -Message '");
+//		wcscat(lDialogString, aMessage);
+//		wcscat(lDialogString, L"'");
+//	}
+//	if (aMessage && wcslen(aIconType))
+//	{
+//		wcscat(lDialogString, L" -IconType '");
+//		wcscat(lDialogString, aIconType);
+//		wcscat(lDialogString, L"'");
+//	}
+//	wcscat(lDialogString, L"\"");
+//
+//	/* wprintf ( L"lDialogString: %ls\n" , lDialogString ) ; */
+//	wcscpy(lDialogString,
+//		L"cmd.exe /c mshta.exe \"%TEMP%\\tinyfd.hta\"");
+//
+//	hiddenConsoleW(lDialogString, aTitle, 0);
+//	free(lDialogString);
+//	return 1;
+//}
 
 
 typedef struct
