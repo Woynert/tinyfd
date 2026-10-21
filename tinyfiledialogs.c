@@ -131,7 +131,7 @@ misrepresented as being the original software.
 #endif
 #define LOW_MULTIPLE_FILES 32
 
-char tinyfd_version[8] = "3.22";
+char tinyfd_version[8] = "3.22.1";
 
 /*
 #pragma message("_POSIX_VERSION = " STR(_POSIX_VERSION)) // what the compiler can do (read in the headers)
