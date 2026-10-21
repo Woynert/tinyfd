@@ -221,12 +221,24 @@ char tinyfd_needs[] = "\
 #endif
 
 #ifdef _WIN32
+typedef LONG(WINAPI* RtlGetVersionPtr)(PRTL_OSVERSIONINFOW);
+
 int IsBelowVista()
 {
-	OSVERSIONINFOEXW osvi = {};
+	HMODULE hNtdll = GetModuleHandleW(L"ntdll.dll");
+	if (!hNtdll)
+		return 0; /* Detection failed */
+
+	RtlGetVersionPtr pRtlGetVersion =
+		(RtlGetVersionPtr)GetProcAddress(hNtdll, "RtlGetVersion");
+
+	if (!pRtlGetVersion)
+		return 0; /* Detection failed */
+
+	RTL_OSVERSIONINFOW osvi = {};
 	osvi.dwOSVersionInfoSize = sizeof(osvi);
 
-	if (!GetVersionExW((OSVERSIONINFOW*)&osvi))
+	if (pRtlGetVersion(&osvi) != 0)
 		return 0; /* Detection failed */
 
 	return osvi.dwMajorVersion < 6;
