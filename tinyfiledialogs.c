@@ -1305,7 +1305,7 @@ static LRESULT CALLBACK tfd_notify_WndProc(
 	return DefWindowProcW(hwnd, msg, wp, lp);
 }
 
-int tinyfd_notifyPopupVista11(
+static int tinyfd_notifyPopupVista11(
 	const wchar_t* aTitle,
 	const wchar_t* aMessage,
 	const wchar_t* aIconType)
@@ -1431,7 +1431,7 @@ cleanup:
 }
 
 
-int tinyfd_notifyPopupVBS(
+static int tinyfd_notifyPopupVBS(
 	wchar_t const* aTitle, /* NULL or L"" */
 	wchar_t const* aMessage, /* NULL or L"" may contain \n \t */
 	wchar_t const* aIconType) /* L"info" L"warning" L"error" */
