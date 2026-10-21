@@ -220,6 +220,19 @@ char tinyfd_needs[] = "\
 #pragma warning(disable:4706) /* allows usage of strncpy, strcpy, strcat, sprintf, fopen */
 #endif
 
+#ifdef _WIN32
+int IsBelowVista()
+{
+	OSVERSIONINFOEXW osvi = {};
+	osvi.dwOSVersionInfoSize = sizeof(osvi);
+
+	if (!GetVersionExW((OSVERSIONINFOW*)&osvi))
+		return 0 ; // Detection failed
+
+	return osvi.dwMajorVersion < 6;
+}
+#endif
+
 
 static int getenvDISPLAY(void)
 {
@@ -1301,11 +1314,9 @@ int tinyfd_notifyPopupW(
 	HINSTANCE instance = GetModuleHandleW(NULL);
 	HWND hwnd = NULL;
 	HICON icon;
-	MSG msg;
 	BOOL registeredHere = FALSE;
 	BOOL requestAccepted = FALSE;
 	DWORD infoFlags = NIIF_INFO;
-	int messageResult;
 
 	if (!aTitle)
 		aTitle = L"Notification";
