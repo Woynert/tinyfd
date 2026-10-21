@@ -225,17 +225,20 @@ typedef LONG(WINAPI* RtlGetVersionPtr)(PRTL_OSVERSIONINFOW);
 
 static int IsBelowVista(void)
 {
-	HMODULE hNtdll = GetModuleHandleW(L"ntdll.dll");
+	HMODULE hNtdll;
+	RtlGetVersionPtr pRtlGetVersion ;
+	RTL_OSVERSIONINFOW osvi = {};
+
+	hNtdll = GetModuleHandleW(L"ntdll.dll");
 	if (!hNtdll)
 		return 0; /* Detection failed */
 
-	RtlGetVersionPtr pRtlGetVersion =
+	pRtlGetVersion =
 		(RtlGetVersionPtr)GetProcAddress(hNtdll, "RtlGetVersion");
 
 	if (!pRtlGetVersion)
 		return 0; /* Detection failed */
 
-	RTL_OSVERSIONINFOW osvi = {};
 	osvi.dwOSVersionInfoSize = sizeof(osvi);
 
 	if (pRtlGetVersion(&osvi) != 0)
