@@ -227,7 +227,7 @@ static int IsBelowVista(void)
 {
 	HMODULE hNtdll;
 	RtlGetVersionPtr pRtlGetVersion ;
-	RTL_OSVERSIONINFOW osvi = {};
+	RTL_OSVERSIONINFOW osvi = {0};
 
 	hNtdll = GetModuleHandleW(L"ntdll.dll");
 	if (!hNtdll)
