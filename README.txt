@@ -188,7 +188,7 @@ char const * tinyfd_colorChooser(
 
 UNIX (including MacOS) :
 $ clang -o hello hello.c tinyfiledialogs.c
-( or gcc tcc owcc icx suncc )
+( or gcc tcc icx suncc )
 ( or g++ clang++ icpx sunCC )
 ( some possible options :
   -ansi -std=c89 -std=c++98 -pedantic -Wstrict-prototypes
@@ -214,9 +214,6 @@ $ clang -o hello hello.c tinyfiledialogs.c
 
   Embarcadero / Borland C :
   > bcc32c -o hello.exe hello.c tinyfiledialogs.c
-
-  Open Watcom C v2
-  > owcc -o hello.exe hello.c tinyfiledialogs.c
 
   Windows Intel C :
   > icx-cc -o hello.exe hello.c tinyfiledialogs.c -lcomdlg32 -lole32 -luser32 -lshell32 -lgdi32
