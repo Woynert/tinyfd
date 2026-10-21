@@ -223,7 +223,7 @@ char tinyfd_needs[] = "\
 #ifdef _WIN32
 typedef LONG(WINAPI* RtlGetVersionPtr)(PRTL_OSVERSIONINFOW);
 
-static int IsBelowVista()
+static int IsBelowVista(void)
 {
 	HMODULE hNtdll = GetModuleHandleW(L"ntdll.dll");
 	if (!hNtdll)
