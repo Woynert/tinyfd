@@ -1563,6 +1563,8 @@ typedef struct
 {
 	wchar_t result[MAX_PATH_OR_CMD];
 	HWND edit;
+	HWND showPasswordCheckbox;
+	WCHAR passwordChar;
 	HINSTANCE instance;
 	int cancelled;
 	int password;
@@ -1610,17 +1612,38 @@ InputDialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			12, 38, 356, 25,
 			hwnd, (HMENU)1001, state->instance, NULL);
 
+		/*
+		 * Show password checkbox.
+		 */
+		if (state->password)
+		{
+			state->passwordChar = (WCHAR)SendMessageW(
+				state->edit,
+				EM_GETPASSWORDCHAR,
+				0, 0);
+
+			state->showPasswordCheckbox = CreateWindowExW(
+				0, L"BUTTON", L"Show password",
+				WS_CHILD | WS_VISIBLE | WS_TABSTOP |
+				BS_AUTOCHECKBOX,
+				12, 76, 150, 22,
+				hwnd, (HMENU)1002,
+				state->instance, NULL);
+		}
+
 		ok = CreateWindowExW(
 			0, L"BUTTON", L"OK",
 			WS_CHILD | WS_VISIBLE | WS_TABSTOP |
 			BS_DEFPUSHBUTTON,
-			192, 76, 84, 27,
+			192, 76 + (state->password ? 30 : 0),
+			84, 27,
 			hwnd, (HMENU)IDOK, state->instance, NULL);
 
 		cancel = CreateWindowExW(
 			0, L"BUTTON", L"Cancel",
 			WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-			284, 76, 84, 27,
+			284, 76 + (state->password ? 30 : 0),
+			84, 27,
 			hwnd, (HMENU)IDCANCEL, state->instance, NULL);
 
 		SendMessageW(prompt, WM_SETFONT, (WPARAM)font, TRUE);
@@ -1628,11 +1651,42 @@ InputDialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		SendMessageW(ok, WM_SETFONT, (WPARAM)font, TRUE);
 		SendMessageW(cancel, WM_SETFONT, (WPARAM)font, TRUE);
 
+		if (state->showPasswordCheckbox)
+			SendMessageW(
+				state->showPasswordCheckbox,
+				WM_SETFONT, (WPARAM)font, TRUE);
+
 		return 0;
 
 	case WM_COMMAND:
 		switch (LOWORD(wParam))
 		{
+		case 1002:
+			if (HIWORD(wParam) == BN_CLICKED)
+			{
+				if (IsDlgButtonChecked(hwnd, 1002) ==
+					BST_CHECKED)
+				{
+					/* Show password. */
+					SendMessageW(
+						state->edit,
+						EM_SETPASSWORDCHAR,
+						0, 0);
+				}
+				else
+				{
+					/* Hide password. */
+					SendMessageW(
+						state->edit,
+						EM_SETPASSWORDCHAR,
+						state->passwordChar, 0);
+				}
+
+				InvalidateRect(state->edit, NULL, TRUE);
+				UpdateWindow(state->edit);
+			}
+			return 0;
+
 		case IDOK:
 			GetWindowTextW(
 				state->edit,
@@ -1743,7 +1797,8 @@ wchar_t* tinyfd_inputBoxW(
 		lClassName,
 		aTitle ? aTitle : L"Input",
 		WS_CAPTION | WS_SYSMENU | WS_POPUP | WS_VISIBLE,
-		CW_USEDEFAULT, CW_USEDEFAULT, 392, 145,
+		CW_USEDEFAULT, CW_USEDEFAULT,
+		392, state.password ? 175 : 145,
 		GetActiveWindow(), NULL,
 		state.instance, &state);
 
