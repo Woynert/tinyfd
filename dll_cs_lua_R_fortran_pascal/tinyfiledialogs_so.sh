@@ -1,5 +1,7 @@
 #! /bin/sh
 
+set -o xtrace # echo all the commands
+
 if [ `uname -s` = "Linux" ]; then
  echo Linux 32
  gcc -m32 -fPIC -shared -o tinyfiledialogsLinux86.so ../tinyfiledialogs.c
