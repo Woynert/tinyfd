@@ -1548,6 +1548,9 @@ int tinyfd_notifyPopupW(
 	if (quoteDetectedW(aTitle)) return tinyfd_notifyPopupW(L"INVALID TITLE WITH QUOTES", aMessage, aIconType);
 	if (quoteDetectedW(aMessage)) return tinyfd_notifyPopupW(aTitle, L"INVALID MESSAGE WITH QUOTES", aIconType);
 
+#if defined(__MINGW32__)
+	return tinyfd_notifyPopupVBS(aTitle, aMessage, aIconType);
+#else
 	if (IsBelowVista())
 	{
 		return tinyfd_notifyPopupVBS(aTitle, aMessage, aIconType);
@@ -1556,6 +1559,7 @@ int tinyfd_notifyPopupW(
 	{
 		return tinyfd_notifyPopupVista11(aTitle, aMessage, aIconType);
 	}
+#endif
 }
 
 
