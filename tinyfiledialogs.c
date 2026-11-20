@@ -220,33 +220,6 @@ char tinyfd_needs[] = "\
 #pragma warning(disable:4706) /* allows usage of strncpy, strcpy, strcat, sprintf, fopen */
 #endif
 
-#ifdef _WIN32
-typedef LONG(WINAPI* RtlGetVersionPtr)(PRTL_OSVERSIONINFOW);
-
-static int IsBelowVista(void)
-{
-	HMODULE hNtdll;
-	RtlGetVersionPtr pRtlGetVersion ;
-	RTL_OSVERSIONINFOW osvi = {0};
-
-	hNtdll = GetModuleHandleW(L"ntdll.dll");
-	if (!hNtdll)
-		return 0; /* Detection failed */
-
-	pRtlGetVersion =
-		(RtlGetVersionPtr)GetProcAddress(hNtdll, "RtlGetVersion");
-
-	if (!pRtlGetVersion)
-		return 0; /* Detection failed */
-
-	osvi.dwOSVersionInfoSize = sizeof(osvi);
-
-	if (pRtlGetVersion(&osvi) != 0)
-		return 0; /* Detection failed */
-
-	return osvi.dwMajorVersion < 6;
-}
-#endif
 
 static int getenvDISPLAY(void)
 {
@@ -1249,6 +1222,7 @@ Show-BalloonTip");
 		return 1;
 }*/
 
+#if ( !defined(__MINGW32__) )
 
 #define TFD_NOTIFY_CB       (WM_APP + 101)
 #define TFD_NOTIFY_ID       1
@@ -1430,6 +1404,7 @@ cleanup:
 	return requestAccepted ? 1 : 0;
 }
 
+#endif /* not __MINGW32__ */
 
 static int tinyfd_notifyPopupVBS(
 	wchar_t const* aTitle, /* NULL or L"" */
@@ -1536,6 +1511,34 @@ End Sub\n\
 	free(lDialogString);
 	return 1;
 }
+
+#if ( ! defined(__MINGW32__) )
+
+typedef LONG(WINAPI* RtlGetVersionPtr)(PRTL_OSVERSIONINFOW);
+static int IsBelowVista(void)
+{
+	HMODULE hNtdll;
+	RtlGetVersionPtr pRtlGetVersion;
+	RTL_OSVERSIONINFOW osvi = { 0 };
+
+	hNtdll = GetModuleHandleW(L"ntdll.dll");
+	if (!hNtdll)
+		return 0; /* Detection failed */
+
+	pRtlGetVersion =
+		(RtlGetVersionPtr)GetProcAddress(hNtdll, "RtlGetVersion");
+
+	if (!pRtlGetVersion)
+		return 0; /* Detection failed */
+
+	osvi.dwOSVersionInfoSize = sizeof(osvi);
+
+	if (pRtlGetVersion(&osvi) != 0)
+		return 0; /* Detection failed */
+
+	return osvi.dwMajorVersion < 6;
+}
+#endif /* not __MINGW32__ */
 
 
 /* return has only meaning for tinyfd_query */
